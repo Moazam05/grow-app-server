@@ -29,17 +29,6 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
-// todo: REGISTER USER
-exports.register = catchAsync(async (req, res, next) => {
-  const newUser = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-  });
-
-  createSendToken(newUser, 201, res);
-});
-
 // todo: LOGIN USER
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
