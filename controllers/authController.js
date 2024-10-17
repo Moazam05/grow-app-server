@@ -1,6 +1,7 @@
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const { promisify } = require("util");
+const bcrypt = require("bcryptjs");
 // Custom Imports
 const User = require("../models/userModel");
 const catchAsync = require("../utils/catchAsync");
@@ -196,6 +197,35 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: "success",
     message: "OTP sent successfully",
+  });
+});
+
+exports.setPassword = catchAsync(async (req, res, next) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return next(new AppError("Please provide email and password", 400));
+  }
+
+  const user = await User.findOne({ email });
+  if (!user) {
+    return next(new AppError("User not found", 404));
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  await User.findOneAndUpdate(
+    {
+      email,
+    },
+    {
+      password: hashedPassword,
+    }
+  );
+
+  res.status(200).json({
+    status: "success",
+    message: "Password set successfully",
   });
 });
 
