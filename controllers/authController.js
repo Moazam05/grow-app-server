@@ -212,7 +212,18 @@ exports.setPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("User not found", 404));
   }
 
+  if (!user.email_verified) {
+    return next(new AppError("Email not verified", 400));
+  }
+
+  if (user.password) {
+    return next(new AppError("Password already set! use reset password", 400));
+  }
+
   const hashedPassword = await bcrypt.hash(password, 12);
+
+  const access_token = user.createAccessToken();
+  const refresh_token = user.createRefreshToken();
 
   await User.findOneAndUpdate(
     {
@@ -220,12 +231,18 @@ exports.setPassword = catchAsync(async (req, res, next) => {
     },
     {
       password: hashedPassword,
+      access_token,
+      refresh_token,
     }
   );
 
   res.status(200).json({
     status: "success",
     message: "Password set successfully",
+    data: {
+      access_token,
+      refresh_token,
+    },
   });
 });
 
