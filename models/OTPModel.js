@@ -19,25 +19,31 @@ const otpSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 60 * 5,
+    expires: 60 * 5, // 5 minutes expiration
   },
 });
 
+// Hash and send OTP on save (new or updated)
 otpSchema.pre("save", async function (next) {
-  if (this.isNew) {
+  // Hash the OTP if it's new or modified (updated)
+  if (this.isModified("otp")) {
     const salt = await bcrypt.genSalt(10);
-    // send mail
+
+    // Send the verification email before hashing the OTP
     await sendVerificationEmail(this.email, this.otp, this.otp_type);
+
+    // Hash the OTP
     this.otp = await bcrypt.hash(this.otp, salt);
   }
   next();
 });
 
-// todo: Compare OTP
+// Method to compare input OTP with hashed OTP
 otpSchema.methods.compareOTP = async function (otp, hashedOTP) {
   return await bcrypt.compare(otp, hashedOTP);
 };
 
+// Function to send email
 async function sendVerificationEmail(email, otp, otpType) {
   try {
     await mailSender(email, otp, otpType);
