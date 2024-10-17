@@ -108,6 +108,7 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
 
   const otpDoc = await OTP.findOne({
     email,
+    otp_type,
   });
 
   if (!otpDoc) {
