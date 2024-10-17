@@ -5,6 +5,8 @@ const { promisify } = require("util");
 const User = require("../models/userModel");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/appError");
+const { generateOTP } = require("../mailer");
+const OTP = require("../models/OTPModel");
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -81,19 +83,24 @@ exports.checkEmail = catchAsync(async (req, res, next) => {
   }
 
   if (!user.email_verified || !user.password) {
-    // generate otp
+    // Generate OTP
+    const otp = await generateOTP();
+
     const otpPayload = {
       email,
-      otp: otp,
+      otp,
       otp_type: "email",
     };
-    // send otp
+
+    // Save OTP
+    await OTP.create(otpPayload);
   }
 
   res.status(200).json({
     status: "success",
     data: {
-      user,
+      email_verified: user.email_verified,
+      phone_verified: user.phone_verified,
     },
   });
 });
