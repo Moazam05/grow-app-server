@@ -182,6 +182,14 @@ exports.sendOTP = catchAsync(async (req, res, next) => {
 
   const otp = await generateOTP();
 
+  const user = await User.findOne({
+    email,
+  });
+
+  if (otp_type === "phone" && user.phone_number) {
+    return next(new AppError("Phone number already exist", 400));
+  }
+
   let existingOtp = await OTP.findOne({ email, otp_type });
 
   if (existingOtp) {
