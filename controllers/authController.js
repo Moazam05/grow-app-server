@@ -83,17 +83,21 @@ exports.checkEmail = catchAsync(async (req, res, next) => {
   }
 
   if (!user.email_verified || !user.password) {
-    // Generate OTP
+    // Generate a new OTP
     const otp = await generateOTP();
 
-    const otpPayload = {
-      email,
-      otp,
-      otp_type: "email",
-    };
+    // Check if an OTP for this email already exists
+    let existingOtp = await OTP.findOne({ email, otp_type: "email" });
 
-    // Save OTP
-    await OTP.create(otpPayload);
+    if (existingOtp) {
+      // Update the existing OTP and reset expiration time
+      existingOtp.otp = otp; // New OTP will be hashed and email will be sent in the `pre` hook
+      existingOtp.createdAt = Date.now(); // Reset the expiration timer
+      await existingOtp.save();
+    } else {
+      // Create a new OTP entry if none exists
+      await OTP.create({ email, otp, otp_type: "email" });
+    }
   }
 
   res.status(200).json({
