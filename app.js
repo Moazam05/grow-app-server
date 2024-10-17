@@ -4,6 +4,7 @@ const colors = require("colors");
 const cors = require("cors");
 const path = require("path");
 require("dotenv").config();
+require("express-async-errors");
 // Custom Imports
 const AppError = require("./utils/appError");
 const globalErrorHandler = require("./controllers/errorController");

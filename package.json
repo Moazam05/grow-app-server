@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "server": "nodemon server.js"
+    "server": "clear && nodemon server.js"
   },
   "author": "Salman Muazam",
   "license": "MIT",
