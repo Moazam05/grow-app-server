@@ -27,6 +27,7 @@ const createSendToken = (user, statusCode, res) => {
   });
 };
 
+// todo: REGISTER USER
 exports.register = catchAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -37,6 +38,7 @@ exports.register = catchAsync(async (req, res, next) => {
   createSendToken(newUser, 201, res);
 });
 
+// todo: LOGIN USER
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -46,7 +48,7 @@ exports.login = catchAsync(async (req, res, next) => {
   }
 
   // 2) Check if user exists && password is exist
-  const user = await User.findOne({ email }).select("+password");
+  const user = await User.findOne({ email });
   if (!user) {
     return next(new AppError("Incorrect email or password", 401));
   }
@@ -60,6 +62,43 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+// todo: CHECK EMAIL
+exports.checkEmail = catchAsync(async (req, res, next) => {
+  const { email } = req.body;
+
+  if (!email) {
+    return next(new AppError("Please provide email", 400));
+  }
+
+  let user = await User.findOne({
+    email,
+  });
+
+  if (!user) {
+    user = await User.create({
+      email,
+    });
+  }
+
+  if (!user.email_verified || !user.password) {
+    // generate otp
+    const otpPayload = {
+      email,
+      otp: otp,
+      otp_type: "email",
+    };
+    // send otp
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
+    },
+  });
+});
+
+// todo: PROTECT ROUTES ** MIDDLEWARE **
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check of it's there
   let token;

@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Please provide a password"],
       minlength: 6,
       maxLength: 20,
     },
@@ -61,13 +60,15 @@ const userSchema = new mongoose.Schema(
 
 // Password Hashing
 userSchema.pre("save", async function (next) {
-  // Only hash the password if it is new or has been modified
-  if (!this.isModified("password")) return next();
+  if (this?.password) {
+    // Only hash the password if it is new or has been modified
+    if (!this.isModified("password")) return next();
 
-  // Hash the password with cost of 12
-  this.password = await bcrypt.hash(this.password, 12);
+    // Hash the password with cost of 12
+    this.password = await bcrypt.hash(this.password, 12);
 
-  next();
+    next();
+  }
 });
 
 // instance method

@@ -7,4 +7,6 @@ const router = express.Router();
 router.post("/register", authController.register);
 router.post("/login", authController.login);
 
+router.post("/check-email", authController.checkEmail);
+
 module.exports = router;
