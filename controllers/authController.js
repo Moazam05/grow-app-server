@@ -105,6 +105,80 @@ exports.checkEmail = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.verifyOTP = catchAsync(async (req, res, next) => {
+  const { email, otp, otp_type, data } = req.body;
+
+  if (!email || !otp || !otp_type) {
+    return next(new AppError("Please provide email, otp and otp_type", 400));
+  }
+
+  const otpDoc = await OTP.findOne({
+    email,
+  });
+
+  if (!otpDoc) {
+    return next(new AppError("Email not found", 400));
+  }
+
+  const isVerified = await otpDoc.compareOTP(otp, otpDoc.otp);
+
+  if (!isVerified) {
+    return next(new AppError("Invalid OTP", 400));
+  }
+
+  switch (otp_type) {
+    case "phone":
+      await User.findOneAndUpdate(
+        {
+          email,
+        },
+        {
+          phone_number: data,
+          phone_verified: true,
+        }
+      );
+      break;
+    case "email":
+      await User.findOneAndUpdate(
+        {
+          email,
+        },
+        {
+          email_verified: true,
+        }
+      );
+      break;
+    case "reset_pin":
+      await User.findOneAndUpdate(
+        {
+          email,
+        },
+        {
+          login_pin: data,
+        }
+      );
+      break;
+    case "reset_password":
+      const hashedPassword = await bcrypt.hash(data, 12);
+      await User.findOneAndUpdate(
+        {
+          email,
+        },
+        {
+          password: hashedPassword,
+        }
+      );
+      break;
+    default:
+      throw new Error("Invalid OTP type");
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "OTP verified successfully",
+  });
+});
+
 // todo: PROTECT ROUTES ** MIDDLEWARE **
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check of it's there
