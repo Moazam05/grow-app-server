@@ -183,6 +183,33 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.sendOTP = catchAsync(async (req, res, next) => {
+  const { email, otp_type } = req.body;
+
+  if (!email || !otp_type) {
+    return next(new AppError("Please provide email and otp_type", 400));
+  }
+
+  const otp = await generateOTP();
+
+  let existingOtp = await OTP.findOne({ email, otp_type });
+
+  if (existingOtp) {
+    // Update the existing OTP and reset expiration time
+    existingOtp.otp = otp; // New OTP will be hashed and email will be sent in the `pre` hook
+    existingOtp.createdAt = Date.now(); // Reset the expiration timer
+    await existingOtp.save();
+  } else {
+    // Create a new OTP entry if none exists
+    await OTP.create({ email, otp, otp_type });
+  }
+
+  res.status(200).json({
+    status: "success",
+    message: "OTP sent successfully",
+  });
+});
+
 // todo: PROTECT ROUTES ** MIDDLEWARE **
 exports.protect = catchAsync(async (req, res, next) => {
   // 1) Getting token and check of it's there
