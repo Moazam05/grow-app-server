@@ -49,10 +49,6 @@ exports.verifyBiometric = catchAsync(async (req, res, next) => {
     user.biometricKey
   );
 
-  console.log("isVerifiedSignature: ", isVerifiedSignature);
-  console.log("user.biometricKey: ", user.biometricKey);
-  console.log("signature: ", signature);
-
   if (!isVerifiedSignature) {
     return next(new AppError("Biometric verification failed", 401));
   }
@@ -64,7 +60,7 @@ exports.verifyBiometric = catchAsync(async (req, res, next) => {
 });
 
 async function verifySignature(signature, payload, publicKey) {
-  const publicKeyBuffer = Buffer.from(publicKey, "base64"); // Convert the public key from base64
+  const publicKeyBuffer = Buffer.from(publicKey, "base64");
   const key = new NodeRSA();
 
   // Import the public key as a PEM-encoded key (default format used in biometric systems)
