@@ -25,7 +25,6 @@ const userSchema = new mongoose.Schema(
     login_pin: {
       type: String,
       minlength: 4,
-      maxLength: 4,
     },
     phone_number: {
       type: String,

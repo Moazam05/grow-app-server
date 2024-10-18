@@ -171,7 +171,40 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
 });
 
 // todo: SET PIN
-exports.setPin = catchAsync(async (req, res, next) => {});
+exports.setLoginPinFirst = catchAsync(async (req, res, next) => {
+  const { login_pin } = req.body;
+  const user = req.user;
+
+  if (!login_pin || login_pin.length !== 4) {
+    return next(new AppError("Please provide login pin", 400));
+  }
+
+  // pin saved as hashed
+  const hashedPin = await bcrypt.hash(login_pin, 12);
+
+  if (user.login_pin) {
+    return next(new AppError("Pin already set! use reset pin", 400));
+  }
+
+  const updated = await User.findByIdAndUpdate(
+    user.id,
+    {
+      login_pin: hashedPin,
+    },
+
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: updated,
+    },
+  });
+});
 
 // todo: PROTECT ROUTES ** MIDDLEWARE **
 exports.protect = catchAsync(async (req, res, next) => {
