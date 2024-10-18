@@ -26,5 +26,6 @@ router.put("/profile", authController.updateProfile);
 router.post("/set-pin", authController.setLoginPinFirst);
 router.post("/verify-pin", authController.verifyLoginPin);
 router.post("/upload-biometric", biometricController.uploadBiometric);
+router.post("/verify-biometric", biometricController.verifyBiometric);
 
 module.exports = router;
