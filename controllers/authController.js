@@ -231,28 +231,16 @@ exports.setPassword = catchAsync(async (req, res, next) => {
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
-  const access_token = user.createAccessToken();
-  const refresh_token = user.createRefreshToken();
-
   await User.findOneAndUpdate(
     {
       email,
     },
     {
       password: hashedPassword,
-      access_token,
-      refresh_token,
     }
   );
 
-  res.status(200).json({
-    status: "success",
-    message: "Password set successfully",
-    data: {
-      access_token,
-      refresh_token,
-    },
-  });
+  createSendToken(user, 200, res);
 });
 
 // todo: PROTECT ROUTES ** MIDDLEWARE **
