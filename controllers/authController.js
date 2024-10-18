@@ -99,6 +99,7 @@ exports.checkEmail = catchAsync(async (req, res, next) => {
   });
 });
 
+// todo: SET PASSWORD
 exports.setPassword = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
@@ -132,6 +133,45 @@ exports.setPassword = catchAsync(async (req, res, next) => {
 
   createSendToken(user, 200, res);
 });
+
+// todo: UPDATE PROFILE
+exports.updateProfile = catchAsync(async (req, res, next) => {
+  const { name, gender, date_of_birth } = req.body;
+  const user = req.user;
+
+  console.log("user", user);
+  console.log("req.body", req.body);
+
+  if (!name || !gender || !date_of_birth) {
+    return next(
+      new AppError("Please provide name, gender and date_of_birth", 400)
+    );
+  }
+
+  const updated = await User.findByIdAndUpdate(
+    user.id,
+    {
+      name,
+      gender,
+      date_of_birth,
+    },
+
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user: updated,
+    },
+  });
+});
+
+// todo: SET PIN
+exports.setPin = catchAsync(async (req, res, next) => {});
 
 // todo: PROTECT ROUTES ** MIDDLEWARE **
 exports.protect = catchAsync(async (req, res, next) => {

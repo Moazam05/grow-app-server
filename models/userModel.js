@@ -34,8 +34,9 @@ const userSchema = new mongoose.Schema(
         "Please provide a valid phone number",
       ],
     },
-    address: {
+    gender: {
       type: String,
+      enum: ["Male", "Female", "Other"],
     },
     date_of_birth: {
       type: Date,

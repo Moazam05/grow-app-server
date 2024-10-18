@@ -9,6 +9,8 @@ router.post("/login", authController.login);
 
 router.post("/check-email", authController.checkEmail);
 router.post("/set-password", authController.setPassword);
+router.put("/profile", authController.protect, authController.updateProfile);
+router.post("/set-pin", authController.protect, authController.setPin);
 
 // todo: OTP ROUTES
 router.post("/verify-otp", otpController.verifyOTP);
