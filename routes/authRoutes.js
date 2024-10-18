@@ -9,11 +9,18 @@ router.post("/login", authController.login);
 
 router.post("/check-email", authController.checkEmail);
 router.post("/set-password", authController.setPassword);
+
+// todo: PROTECTED ROUTES *** --------------------- ***
 router.put("/profile", authController.protect, authController.updateProfile);
 router.post(
   "/set-pin",
   authController.protect,
   authController.setLoginPinFirst
+);
+router.post(
+  "/verify-pin",
+  authController.protect,
+  authController.verifyLoginPin
 );
 
 // todo: OTP ROUTES

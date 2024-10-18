@@ -175,8 +175,12 @@ exports.setLoginPinFirst = catchAsync(async (req, res, next) => {
   const { login_pin } = req.body;
   const user = req.user;
 
-  if (!login_pin || login_pin.length !== 4) {
+  if (!login_pin) {
     return next(new AppError("Please provide login pin", 400));
+  }
+
+  if (login_pin.length !== 4) {
+    return next(new AppError("Please provide 4 digit pin", 400));
   }
 
   // pin saved as hashed
@@ -202,6 +206,33 @@ exports.setLoginPinFirst = catchAsync(async (req, res, next) => {
     status: "success",
     data: {
       user: updated,
+    },
+  });
+});
+
+// todo: VERIFY PIN
+exports.verifyLoginPin = catchAsync(async (req, res, next) => {
+  const { login_pin } = req.body;
+  const user = req.user;
+
+  if (!login_pin) {
+    return next(new AppError("Please provide login pin", 400));
+  }
+
+  if (login_pin.length !== 4) {
+    return next(new AppError("Please provide 4 digit pin", 400));
+  }
+
+  const correct = await bcrypt.compare(login_pin, user.login_pin);
+
+  if (!correct) {
+    return next(new AppError("Incorrect pin", 401));
+  }
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      user,
     },
   });
 });
