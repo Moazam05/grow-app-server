@@ -69,6 +69,9 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
       );
       break;
     case "reset_password":
+      if (!data) {
+        return next(new AppError("Please provide password", 400));
+      }
       const hashedPassword = await bcrypt.hash(data, 12);
       await User.findOneAndUpdate(
         {
