@@ -1,6 +1,7 @@
 const express = require("express");
 const authController = require("../controllers/authController");
 const otpController = require("../controllers/otpController");
+const oauthController = require("../controllers/oauthController");
 
 const router = express.Router();
 
@@ -10,21 +11,18 @@ router.post("/login", authController.login);
 router.post("/check-email", authController.checkEmail);
 router.post("/set-password", authController.setPassword);
 
-// todo: PROTECTED ROUTES *** --------------------- ***
-router.put("/profile", authController.protect, authController.updateProfile);
-router.post(
-  "/set-pin",
-  authController.protect,
-  authController.setLoginPinFirst
-);
-router.post(
-  "/verify-pin",
-  authController.protect,
-  authController.verifyLoginPin
-);
-
 // todo: OTP ROUTES
 router.post("/verify-otp", otpController.verifyOTP);
 router.post("/send-otp", otpController.sendOTP);
+
+// todo: OAuth ROUTES
+router.post("/google-login", oauthController.googleLogin);
+
+// todo: PROTECTED --------------------- ROUTES
+router.use(authController.protect);
+
+router.put("/profile", authController.updateProfile);
+router.post("/set-pin", authController.setLoginPinFirst);
+router.post("/verify-pin", authController.verifyLoginPin);
 
 module.exports = router;
