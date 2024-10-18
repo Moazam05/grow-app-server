@@ -54,6 +54,28 @@ exports.login = catchAsync(async (req, res, next) => {
   createSendToken(user, 200, res);
 });
 
+// todo: LOGOUT USER
+exports.logout = catchAsync(async (req, res, next) => {
+  const user = req.user;
+
+  // delete biometric key
+  await User.findByIdAndUpdate(
+    user.id,
+    {
+      biometricKey: null,
+    },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
+
+  res.status(200).json({
+    status: "success",
+    message: "User logged out successfully",
+  });
+});
+
 // todo: CHECK EMAIL
 exports.checkEmail = catchAsync(async (req, res, next) => {
   const { email } = req.body;

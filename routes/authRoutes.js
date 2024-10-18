@@ -27,5 +27,6 @@ router.post("/set-pin", authController.setLoginPinFirst);
 router.post("/verify-pin", authController.verifyLoginPin);
 router.post("/upload-biometric", biometricController.uploadBiometric);
 router.post("/verify-biometric", biometricController.verifyBiometric);
+router.post("/logout", authController.logout);
 
 module.exports = router;
