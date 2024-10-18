@@ -50,12 +50,21 @@ exports.verifyOTP = catchAsync(async (req, res, next) => {
       );
       break;
     case "reset_pin":
+      if (!data) {
+        return next(new AppError("Please provide login pin", 400));
+      }
+
+      if (data.length !== 4) {
+        return next(new AppError("Please provide 4 digit pin", 400));
+      }
+      const hashedPin = await bcrypt.hash(data, 12);
+
       await User.findOneAndUpdate(
         {
           email,
         },
         {
-          login_pin: data,
+          login_pin: hashedPin,
         }
       );
       break;
