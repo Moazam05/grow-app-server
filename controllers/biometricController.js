@@ -45,7 +45,7 @@ exports.verifyBiometric = catchAsync(async (req, res, next) => {
 
   const isVerifiedSignature = await verifySignature(
     signature,
-    "123123",
+    user.id,
     user.biometricKey
   );
 
