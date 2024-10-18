@@ -2,6 +2,7 @@ const express = require("express");
 const authController = require("../controllers/authController");
 const otpController = require("../controllers/otpController");
 const oauthController = require("../controllers/oauthController");
+const biometricController = require("../controllers/biometricController");
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use(authController.protect);
 router.put("/profile", authController.updateProfile);
 router.post("/set-pin", authController.setLoginPinFirst);
 router.post("/verify-pin", authController.verifyLoginPin);
+router.post("/upload-biometric", biometricController.uploadBiometric);
 
 module.exports = router;

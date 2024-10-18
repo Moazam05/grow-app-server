@@ -40,6 +40,9 @@ const userSchema = new mongoose.Schema(
     date_of_birth: {
       type: Date,
     },
+    biometricKey: {
+      type: String,
+    },
     email_verified: {
       type: Boolean,
       default: false,

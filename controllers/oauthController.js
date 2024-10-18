@@ -1,12 +1,9 @@
 require("dotenv").config();
-const bcrypt = require("bcryptjs");
 const { OAuth2Client } = require("google-auth-library");
 const jwt = require("jsonwebtoken");
 // Custom Imports
-const { generateOTP } = require("../mailer");
 const AppError = require("../utils/appError");
 const catchAsync = require("../utils/catchAsync");
-const OTP = require("../models/OTPModel");
 const User = require("../models/userModel");
 
 const signToken = (id) => {
@@ -35,6 +32,10 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 exports.googleLogin = catchAsync(async (req, res, next) => {
   const { tokenId } = req.body;
 
+  if (!tokenId) {
+    return next(new AppError("Token is required", 400));
+  }
+
   // Verify the Google token using the OAuth2 client
   const ticket = await googleClient.verifyIdToken({
     idToken: tokenId,
@@ -44,6 +45,10 @@ exports.googleLogin = catchAsync(async (req, res, next) => {
   const payload = ticket.getPayload();
 
   const { email, name } = payload;
+
+  if (!email || !name) {
+    return next(new AppError("Invalid Google token", 400));
+  }
 
   // Find the user by email, if they don't exist, create one
   const user = await User.findOneAndUpdate(
