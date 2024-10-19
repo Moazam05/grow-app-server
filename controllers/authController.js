@@ -59,16 +59,9 @@ exports.logout = catchAsync(async (req, res, next) => {
   const user = req.user;
 
   // delete biometric key
-  await User.findByIdAndUpdate(
-    user.id,
-    {
-      biometricKey: null,
-    },
-    {
-      new: true,
-      runValidators: true,
-    }
-  );
+  await User.findByIdAndUpdate(user.id, {
+    $unset: { biometricKey: 1 },
+  });
 
   res.status(200).json({
     status: "success",
