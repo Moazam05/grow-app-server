@@ -42,30 +42,32 @@ exports.login = catchAsync(async (req, res, next) => {
   // 2) Find user
   const user = await User.findOne({ email });
   if (!user) {
-    return next(new AppError("Incorrect email or password", 401));
+    return next(new AppError("User not found", 401));
   }
 
-  // 3) Check block status
-  const isBlocked = user.blocked_until_password > Date.now();
-  if (isBlocked) {
-    const millisecondsLeft = user.blocked_until_password - Date.now();
-    const minutesLeft = Math.floor(millisecondsLeft / (1000 * 60));
-
-    return next(
-      new AppError(
-        `You are blocked from logging in. Please try again in ${minutesLeft} minutes.`,
-        401
-      )
-    );
-  }
-
-  // 4) Verify password
-  const correct = await user.correctPassword(password);
+  // 3) Verify password
+  const correct = await user.comparePassword(password);
   if (!correct) {
-    return next(new AppError("Incorrect email or password", 401));
+    const isBlocked = user.blocked_until_password > Date.now();
+    if (isBlocked) {
+      const millisecondsLeft = user.blocked_until_password - Date.now();
+      const minutesLeft = Math.floor(millisecondsLeft / (1000 * 60));
+
+      return next(
+        new AppError(
+          `You are blocked from logging in. Please try again in ${minutesLeft} minutes.`,
+          401
+        )
+      );
+    } else {
+      const attemptsLeft = 3 - user.wrong_password_attempts;
+      return next(
+        new AppError(`Incorrect password. ${attemptsLeft} attempts left`, 401)
+      );
+    }
   }
 
-  // 5) Send token
+  // 4) Send token
   createSendToken(user, 200, res);
 });
 
@@ -169,9 +171,6 @@ exports.updateProfile = catchAsync(async (req, res, next) => {
   const { name, gender, date_of_birth } = req.body;
   const user = req.user;
 
-  console.log("user", user);
-  console.log("req.body", req.body);
-
   if (!name || !gender || !date_of_birth) {
     return next(
       new AppError("Please provide name, gender and date_of_birth", 400)
@@ -253,10 +252,27 @@ exports.verifyLoginPin = catchAsync(async (req, res, next) => {
     return next(new AppError("Please provide 4 digit pin", 400));
   }
 
-  const correct = await bcrypt.compare(login_pin, user.login_pin);
-
+  // Verify pin
+  const correct = await user.comparePin(login_pin);
   if (!correct) {
-    return next(new AppError("Incorrect pin", 401));
+    // Check block status
+    const isBlocked = user.blocked_until_pin > Date.now();
+    if (isBlocked) {
+      const millisecondsLeft = user.blocked_until_pin - Date.now();
+      const minutesLeft = Math.floor(millisecondsLeft / (1000 * 60));
+
+      return next(
+        new AppError(
+          `You are blocked from logging in. Please try again in ${minutesLeft} minutes.`,
+          401
+        )
+      );
+    } else {
+      const attemptsLeft = 3 - user.wrong_pin_attempts;
+      return next(
+        new AppError(`Incorrect pin. ${attemptsLeft} attempts left`, 401)
+      );
+    }
   }
 
   res.status(200).json({

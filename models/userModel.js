@@ -27,6 +27,7 @@ const userSchema = new mongoose.Schema(
     },
     phone_number: {
       type: String,
+      unique: true,
       validate: [
         validator.isMobilePhone,
         "Please provide a valid phone number",
@@ -78,19 +79,17 @@ const userSchema = new mongoose.Schema(
 
 // Password Hashing
 userSchema.pre("save", async function (next) {
-  if (this?.password) {
-    // Only hash the password if it is new or has been modified
-    if (!this.isModified("password")) return next();
+  // Only hash the password if it is new or has been modified
+  if (!this.isModified("password")) return next();
 
-    // Hash the password with cost of 12
-    this.password = await bcrypt.hash(this.password, 12);
+  // Hash the password with cost of 12
+  this.password = await bcrypt.hash(this.password, 12);
 
-    next();
-  }
+  next();
 });
 
 // instance method
-userSchema.methods.correctPassword = async function (candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   const isMatch = await bcrypt.compare(candidatePassword, this.password);
 
   if (!isMatch) {
@@ -100,6 +99,23 @@ userSchema.methods.correctPassword = async function (candidatePassword) {
     }
   } else {
     this.wrong_password_attempts = 0;
+  }
+
+  await this.save();
+  return isMatch;
+};
+
+// instance method for compare pin
+userSchema.methods.comparePin = async function (candidatePin) {
+  const isMatch = await bcrypt.compare(candidatePin, this.login_pin);
+
+  if (!isMatch) {
+    this.wrong_pin_attempts += 1;
+    if (this.wrong_pin_attempts >= 3) {
+      this.blocked_until_pin = Date.now() + 30 * 60 * 1000; // 30 minutes
+    }
+  } else {
+    this.wrong_pin_attempts = 0;
   }
 
   await this.save();
