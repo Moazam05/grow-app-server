@@ -20,7 +20,6 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       minlength: 6,
-      maxLength: 20,
     },
     login_pin: {
       type: String,
@@ -55,6 +54,22 @@ const userSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    wrong_pin_attempts: {
+      type: Number,
+      default: 0,
+    },
+    blocked_until_pin: {
+      type: Date,
+      default: null,
+    },
+    wrong_password_attempts: {
+      type: Number,
+      default: 0,
+    },
+    blocked_until_password: {
+      type: Date,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -75,11 +90,20 @@ userSchema.pre("save", async function (next) {
 });
 
 // instance method
-userSchema.methods.correctPassword = async function (
-  candidatePassword,
-  userPassword
-) {
-  return await bcrypt.compare(candidatePassword, userPassword);
+userSchema.methods.correctPassword = async function (candidatePassword) {
+  const isMatch = await bcrypt.compare(candidatePassword, this.password);
+
+  if (!isMatch) {
+    this.wrong_password_attempts += 1;
+    if (this.wrong_password_attempts >= 3) {
+      this.blocked_until_password = Date.now() + 30 * 60 * 1000; // 30 minutes
+    }
+  } else {
+    this.wrong_password_attempts = 0;
+  }
+
+  await this.save();
+  return isMatch;
 };
 
 const User = new mongoose.model("User", userSchema);

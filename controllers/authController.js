@@ -34,23 +34,38 @@ const createSendToken = (user, statusCode, res) => {
 exports.login = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
 
-  // 1) Check if email and password exist
+  // 1) Validate input
   if (!email || !password) {
     return next(new AppError("Please provide email and password", 400));
   }
 
-  // 2) Check if user exists && password is exist
+  // 2) Find user
   const user = await User.findOne({ email });
   if (!user) {
     return next(new AppError("Incorrect email or password", 401));
   }
 
-  const correct = await user.correctPassword(password, user.password);
+  // 3) Check block status
+  const isBlocked = user.blocked_until_password > Date.now();
+  if (isBlocked) {
+    const millisecondsLeft = user.blocked_until_password - Date.now();
+    const minutesLeft = Math.floor(millisecondsLeft / (1000 * 60));
+
+    return next(
+      new AppError(
+        `You are blocked from logging in. Please try again in ${minutesLeft} minutes.`,
+        401
+      )
+    );
+  }
+
+  // 4) Verify password
+  const correct = await user.correctPassword(password);
   if (!correct) {
     return next(new AppError("Incorrect email or password", 401));
   }
 
-  // 3) If everything ok, send token to client
+  // 5) Send token
   createSendToken(user, 200, res);
 });
 
