@@ -95,7 +95,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   if (!isMatch) {
     this.wrong_password_attempts += 1;
     if (this.wrong_password_attempts >= 3) {
-      this.blocked_until_password = Date.now() + 30 * 60 * 1000; // 30 minutes
+      this.blocked_until_password = Date.now() + 3 * 60 * 1000; // 3 minutes
     }
   } else {
     this.wrong_password_attempts = 0;
@@ -112,7 +112,7 @@ userSchema.methods.comparePin = async function (candidatePin) {
   if (!isMatch) {
     this.wrong_pin_attempts += 1;
     if (this.wrong_pin_attempts >= 3) {
-      this.blocked_until_pin = Date.now() + 30 * 60 * 1000; // 30 minutes
+      this.blocked_until_pin = Date.now() + 3 * 60 * 1000; // 3 minutes
     }
   } else {
     this.wrong_pin_attempts = 0;
