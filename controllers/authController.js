@@ -20,6 +20,10 @@ const createSendToken = (user, statusCode, res) => {
 
   // Remove password from output
   user.password = undefined;
+  user.wrong_pin_attempts = undefined;
+  user.blocked_until_pin = undefined;
+  user.wrong_password_attempts = undefined;
+  user.blocked_until_password = undefined;
 
   res.status(statusCode).json({
     status: "success",
