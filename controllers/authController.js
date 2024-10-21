@@ -45,26 +45,31 @@ exports.login = catchAsync(async (req, res, next) => {
     return next(new AppError("User not found", 401));
   }
 
+  const currentTime = Date.now();
+  const blockedUntil = new Date(user.blocked_until_password).getTime();
+
+  const isBlocked = blockedUntil > currentTime;
+
+  if (isBlocked) {
+    // Convert blockedUntil to a readable time (12-hour format)
+    const unblockTime = new Date(blockedUntil).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // Ensures 12-hour format with AM/PM
+    });
+
+    return next(
+      new AppError(
+        `You are blocked from logging in. Please try again at ${unblockTime}.`,
+        401
+      )
+    );
+  }
+
   // 3) Verify password
   const correct = await user.comparePassword(password);
   if (!correct) {
-    const isBlocked = user.blocked_until_password > Date.now();
-    if (isBlocked) {
-      const millisecondsLeft = user.blocked_until_password - Date.now();
-      const minutesLeft = Math.floor(millisecondsLeft / (1000 * 60));
-
-      return next(
-        new AppError(
-          `You are blocked from logging in. Please try again in ${minutesLeft} minutes.`,
-          401
-        )
-      );
-    } else {
-      const attemptsLeft = 3 - user.wrong_password_attempts;
-      return next(
-        new AppError(`Incorrect password. ${attemptsLeft} attempts left`, 401)
-      );
-    }
+    return next(new AppError("Incorrect email or password", 401));
   }
 
   // 4) Send token
