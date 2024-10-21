@@ -69,7 +69,17 @@ exports.login = catchAsync(async (req, res, next) => {
   // 3) Verify password
   const correct = await user.comparePassword(password);
   if (!correct) {
-    return next(new AppError("Incorrect email or password", 401));
+    const attemptsLeft = 3 - user.wrong_password_attempts;
+    if (attemptsLeft > 0) {
+      return next(
+        new AppError(
+          `Incorrect Credentials. ${attemptsLeft} attempts left`,
+          401
+        )
+      );
+    } else {
+      return next(new AppError(`Incorrect Credentials.`, 401));
+    }
   }
 
   // 4) Send token
@@ -257,26 +267,41 @@ exports.verifyLoginPin = catchAsync(async (req, res, next) => {
     return next(new AppError("Please provide 4 digit pin", 400));
   }
 
+  const currentTime = Date.now();
+  const blockedUntil = new Date(user.blocked_until_pin).getTime();
+
+  const isBlocked = blockedUntil > currentTime;
+
+  if (isBlocked) {
+    // Convert blockedUntil to a readable time (12-hour format)
+    const unblockTime = new Date(blockedUntil).toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true, // Ensures 12-hour format with AM/PM
+    });
+
+    return next(
+      new AppError(
+        `You are blocked from logging in. Please try again at ${unblockTime}.`,
+        401
+      )
+    );
+  }
+
   // Verify pin
   const correct = await user.comparePin(login_pin);
-  if (!correct) {
-    // Check block status
-    const isBlocked = user.blocked_until_pin > Date.now();
-    if (isBlocked) {
-      const millisecondsLeft = user.blocked_until_pin - Date.now();
-      const minutesLeft = Math.floor(millisecondsLeft / (1000 * 60));
 
+  if (!correct) {
+    const attemptsLeft = 3 - user.wrong_pin_attempts;
+    if (attemptsLeft > 0) {
       return next(
         new AppError(
-          `You are blocked from logging in. Please try again in ${minutesLeft} minutes.`,
+          `Incorrect Credentials. ${attemptsLeft} attempts left`,
           401
         )
       );
     } else {
-      const attemptsLeft = 3 - user.wrong_pin_attempts;
-      return next(
-        new AppError(`Incorrect pin. ${attemptsLeft} attempts left`, 401)
-      );
+      return next(new AppError(`Incorrect pin.`, 401));
     }
   }
 
