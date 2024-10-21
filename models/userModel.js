@@ -28,9 +28,14 @@ const userSchema = new mongoose.Schema(
     phone_number: {
       type: String,
       unique: true,
+      sparse: true, // Allow null values without causing duplicates
       validate: [
-        validator.isMobilePhone,
-        "Please provide a valid phone number",
+        {
+          validator: function (v) {
+            return v == null || validator.isMobilePhone(v);
+          },
+          message: "Please provide a valid phone number",
+        },
       ],
     },
     gender: {
@@ -79,16 +84,12 @@ const userSchema = new mongoose.Schema(
 
 // Password Hashing
 userSchema.pre("save", async function (next) {
-  // Only hash the password if it is new or has been modified
   if (!this.isModified("password")) return next();
-
-  // Hash the password with cost of 12
   this.password = await bcrypt.hash(this.password, 12);
-
   next();
 });
 
-// instance method
+// instance method for password comparison
 userSchema.methods.comparePassword = async function (candidatePassword) {
   const isMatch = await bcrypt.compare(candidatePassword, this.password);
 
@@ -105,7 +106,7 @@ userSchema.methods.comparePassword = async function (candidatePassword) {
   return isMatch;
 };
 
-// instance method for compare pin
+// instance method for pin comparison
 userSchema.methods.comparePin = async function (candidatePin) {
   const isMatch = await bcrypt.compare(candidatePin, this.login_pin);
 
