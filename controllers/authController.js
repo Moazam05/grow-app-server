@@ -167,9 +167,9 @@ exports.setPassword = catchAsync(async (req, res, next) => {
     return next(new AppError("Email not verified", 400));
   }
 
-  if (user.password) {
-    return next(new AppError("Password already set! use reset password", 400));
-  }
+  // if (user.password) {
+  //   return next(new AppError("Password already set! use reset password", 400));
+  // }
 
   const hashedPassword = await bcrypt.hash(password, 12);
 
@@ -234,9 +234,9 @@ exports.setLoginPinFirst = catchAsync(async (req, res, next) => {
   // pin saved as hashed
   const hashedPin = await bcrypt.hash(login_pin, 12);
 
-  if (user.login_pin) {
-    return next(new AppError("Pin already set! use reset pin", 400));
-  }
+  // if (user.login_pin) {
+  //   return next(new AppError("Pin already set! use reset pin", 400));
+  // }
 
   const updated = await User.findByIdAndUpdate(
     user.id,
